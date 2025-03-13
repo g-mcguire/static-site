@@ -52,7 +52,7 @@ class ParentNode(HTMLNode):
         if not self.tag:
             raise ValueError("Tag is required for any object node")
         if not self.children:
-            raise ValueError("An object node must have children")
+            raise ValueError(f"ParentNode with tag '{self.tag}' has no children")
         else:
             subtree_html = ''
             for child in self.children:
