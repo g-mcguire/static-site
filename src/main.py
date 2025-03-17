@@ -7,13 +7,14 @@ def main():
     current = Path(__file__).parent
     source_dir = current.parent / "static"
     target_dir = current.parent  / "public"
-    result = copy_contents(source_dir, target_dir)
+    copy_contents(source_dir, target_dir)
 
-    from_path = current.parent / "content/index.md"
-    dest_path = current.parent / "public/index.html"
+    from_path = current.parent / "content/"
+    dest_path = current.parent / "public/"
     template_path = current.parent / "template.html"
 
-    generate_page(from_path, template_path, dest_path)
+    generate_pages_recursive(from_path, template_path, dest_path)
+    #generate_page(from_path, template_path, dest_path)
     
 
 def copy_contents(source_dir, target_dir):
@@ -66,7 +67,7 @@ def generate_page(from_path, template_path, dest_path):
 
     # convert md to html w. core fxns
     content = markdown_to_html_node(markdown).to_html()
-    print(content)
+    #print(content)
 
     filled_template = template.replace("{{ Title }}", title).replace("{{ Content }}", content)
 
@@ -78,6 +79,40 @@ def generate_page(from_path, template_path, dest_path):
         f.write(filled_template)
 
     return
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    if not os.path.exists(dir_path_content):
+        raise Exception("Source directory does not exist")
+    
+    for item in os.listdir(dir_path_content):
+        source_path = os.path.join(dir_path_content, item)
+        dest_path = os.path.join(dest_dir_path, item)
+
+        if os.path.isdir(source_path):
+            os.makedirs(dest_path, exist_ok=True)
+            generate_pages_recursive(source_path, template_path, dest_path)
+
+        elif os.path.isfile(source_path) and source_path.endswith(".md"):
+            html = populate_template(source_path, template_path)
+            filename, ext = os.path.splitext(item)
+            new_filename = filename + ".html"
+            new_path = os.path.join(dest_dir_path, new_filename)
+
+            with open(new_path, 'w') as f:
+                f.write(html) 
+    return
+
+def populate_template(markdown_path, template_path):
+    markdown = open(markdown_path).read()
+    title = extract_title(markdown)
+
+    template = open(template_path).read()
+    content = markdown_to_html_node(markdown).to_html()
+    filled_template = template.replace("{{ Title }}", title).replace("{{ Content }}", content)
+    return filled_template
+
+
+
 
 
 if __name__ == "__main__":
