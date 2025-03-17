@@ -249,6 +249,13 @@ def create_quote_node(block):
     children = text_to_children(content)
     return ParentNode("blockquote", children)
 
+def extract_title(markdown):
+    first_line = markdown.split("\n")[0]
+    if not first_line.startswith("# "):
+        raise Exception("No h1 header detected.")
+    title = first_line.lstrip("# ").rstrip()
+    return title
+
 """
 if __name__ == "__main__":
     # Test text_to_children

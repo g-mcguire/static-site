@@ -300,5 +300,15 @@ class TestInlineMarkdown(unittest.TestCase):
             "<div><ol><li>First item</li><li>Second item</li><li>Third item with <code>code</code></li></ol></div>",
         )
 
+    def test_extract_title(self):
+        md = "# Title!\n## subtitle"
+        title = extract_title(md)
+        self.assertEqual(title, "Title!")
+
+    def test_no_title(self):
+        md = "There's no title here.\n# But there's an h1 here..."
+        with self.assertRaises(Exception):
+            extract_title(md)
+
 if __name__ == "__main__":
     unittest.main()
