@@ -1,19 +1,24 @@
 from textnode import TextNode, TextType
 from inline_markdown import *
 from pathlib import Path
-import os, shutil
+import os, shutil, sys
 
 def main():
+    basepath = "/"
+    if sys.argv:
+        basepath = sys.argv[0]
+    
     current = Path(__file__).parent
     source_dir = current.parent / "static"
-    target_dir = current.parent  / "public"
+    target_dir = current.parent  / "docs"
+    #target_dir = current.parent  / "public"
     copy_contents(source_dir, target_dir)
 
     from_path = current.parent / "content/"
     dest_path = current.parent / "public/"
     template_path = current.parent / "template.html"
 
-    generate_pages_recursive(from_path, template_path, dest_path)
+    generate_pages_recursive(from_path, template_path, dest_path, basepath)
     #generate_page(from_path, template_path, dest_path)
     
 
@@ -50,7 +55,7 @@ def prep_target_dir(target):
                 shutil.rmtree(item_path)
         print(f"The directory at {target} has been cleared.")
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using the template at {template_path}...")
 
     # read md and save to var
@@ -70,17 +75,18 @@ def generate_page(from_path, template_path, dest_path):
     #print(content)
 
     filled_template = template.replace("{{ Title }}", title).replace("{{ Content }}", content)
+    pathed_template = filled_template.replace("href=\"/", f"href=\"{basepath}").replace("src=\"/", f"src=\"{basepath}")
 
     directory = os.path.dirname(dest_path)
     if directory and not os.path.exists(directory):
         os.makedirs(directory, exist_ok=True)
 
     with open(dest_path, "w") as f:
-        f.write(filled_template)
+        f.write(pathed_template)
 
     return
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     if not os.path.exists(dir_path_content):
         raise Exception("Source directory does not exist")
     
@@ -90,10 +96,10 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
 
         if os.path.isdir(source_path):
             os.makedirs(dest_path, exist_ok=True)
-            generate_pages_recursive(source_path, template_path, dest_path)
+            generate_pages_recursive(source_path, template_path, dest_path, basepath)
 
         elif os.path.isfile(source_path) and source_path.endswith(".md"):
-            html = populate_template(source_path, template_path)
+            html = populate_template(source_path, template_path, basepath)
             filename, ext = os.path.splitext(item)
             new_filename = filename + ".html"
             new_path = os.path.join(dest_dir_path, new_filename)
@@ -102,14 +108,15 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
                 f.write(html) 
     return
 
-def populate_template(markdown_path, template_path):
+def populate_template(markdown_path, template_path, basepath):
     markdown = open(markdown_path).read()
     title = extract_title(markdown)
 
     template = open(template_path).read()
     content = markdown_to_html_node(markdown).to_html()
     filled_template = template.replace("{{ Title }}", title).replace("{{ Content }}", content)
-    return filled_template
+    pathed_template = filled_template.replace("href=\"/", f"href=\"{basepath}").replace("src=\"/", f"src=\"{basepath}")
+    return pathed_template
 
 
 
