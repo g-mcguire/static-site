@@ -15,7 +15,8 @@ def main():
     copy_contents(source_dir, target_dir)
 
     from_path = current.parent / "content/"
-    dest_path = current.parent / "public/"
+    dest_path = current.parent / "docs/"
+    #dest_path = current.parent / "public/"
     template_path = current.parent / "template.html"
 
     generate_pages_recursive(from_path, template_path, dest_path, basepath)
