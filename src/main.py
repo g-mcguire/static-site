@@ -1,12 +1,13 @@
-from textnode import TextNode, TextType
 from inline_markdown import *
 from pathlib import Path
 import os, shutil, sys
 
 def main():
     basepath = "/"
-    if sys.argv:
-        basepath = sys.argv[0]
+    if len(sys.argv) > 1:
+        basepath = sys.argv[1]
+        if not basepath.endswith("/"):
+            basepath += "/"
     
     current = Path(__file__).parent
     source_dir = current.parent / "static"
@@ -15,12 +16,12 @@ def main():
     copy_contents(source_dir, target_dir)
 
     from_path = current.parent / "content/"
-    dest_path = current.parent / "docs/"
+    dest_path = current.parent / "docs"
     #dest_path = current.parent / "public/"
     template_path = current.parent / "template.html"
 
     generate_pages_recursive(from_path, template_path, dest_path, basepath)
-    #generate_page(from_path, template_path, dest_path)
+    #generate_page(from_path, template_path, dest_path, basepath)
     
 
 def copy_contents(source_dir, target_dir):
@@ -85,8 +86,6 @@ def generate_page(from_path, template_path, dest_path, basepath):
     with open(dest_path, "w") as f:
         f.write(pathed_template)
 
-    return
-
 def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     if not os.path.exists(dir_path_content):
         raise Exception("Source directory does not exist")
@@ -100,15 +99,12 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
             generate_pages_recursive(source_path, template_path, dest_path, basepath)
 
         elif os.path.isfile(source_path) and source_path.endswith(".md"):
-            html = populate_template(source_path, template_path, basepath)
             filename, ext = os.path.splitext(item)
             new_filename = filename + ".html"
             new_path = os.path.join(dest_dir_path, new_filename)
+            generate_page(source_path, template_path, new_path, basepath)
 
-            with open(new_path, 'w') as f:
-                f.write(html) 
-    return
-
+"""
 def populate_template(markdown_path, template_path, basepath):
     markdown = open(markdown_path).read()
     title = extract_title(markdown)
@@ -117,8 +113,10 @@ def populate_template(markdown_path, template_path, basepath):
     content = markdown_to_html_node(markdown).to_html()
     filled_template = template.replace("{{ Title }}", title).replace("{{ Content }}", content)
     pathed_template = filled_template.replace("href=\"/", f"href=\"{basepath}").replace("src=\"/", f"src=\"{basepath}")
-    return pathed_template
 
+    print(f"DEBUG: HTML TEMPLATE AS FOLLOWS: {pathed_template}")
+    return pathed_template
+"""
 
 
 
